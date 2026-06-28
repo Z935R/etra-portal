@@ -14,11 +14,7 @@ import {
 } from 'recharts';
 import type { Ticket as ITicket } from '../../types';
 
-const performanceData = [
-  { name: 'لجين', lessons: 85, quizzes: 78, tickets: 90 },
-  { name: 'سارة', lessons: 70, quizzes: 85, tickets: 75 },
-  { name: 'نورة', lessons: 92, quizzes: 70, tickets: 80 },
-];
+
 
 export function AdminDashboardPage() {
   const navigate = useNavigate();
@@ -27,29 +23,58 @@ export function AdminDashboardPage() {
     pendingAssignments: 0, avgCompletion: 0,
   });
   const [recentTickets, setRecentTickets] = useState<ITicket[]>([]);
+  const [performanceData, setPerformanceData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { fetchStats(); }, []);
 
   const fetchStats = async () => {
-    const [traineeRes, openRes, resolvedRes, pendingRes] = await Promise.all([
-      supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'trainee'),
-      supabase.from('tickets').select('id', { count: 'exact' }).not('status', 'in', '("resolved","closed")'),
-      supabase.from('tickets').select('id', { count: 'exact' }).in('status', ['resolved', 'closed']),
-      supabase.from('assignment_submissions').select('id', { count: 'exact' }).eq('status', 'submitted'),
-    ]);
-    const { data: recentData } = await supabase.from('tickets').select('*')
-      .order('created_at', { ascending: false }).limit(5);
+    try {
+      const [traineeRes, openRes, resolvedRes, pendingRes] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'trainee'),
+        supabase.from('tickets').select('id', { count: 'exact' }).neq('status', 'resolved').neq('status', 'closed'),
+        supabase.from('tickets').select('id', { count: 'exact' }).in('status', ['resolved', 'closed']),
+        supabase.from('assignment_submissions').select('id', { count: 'exact' }).eq('status', 'submitted'),
+      ]);
+      const { data: recentData } = await supabase.from('tickets').select('*')
+        .order('created_at', { ascending: false }).limit(5);
 
-    setStats({
-      trainees: traineeRes.count ?? 0,
-      openTickets: openRes.count ?? 0,
-      resolvedTickets: resolvedRes.count ?? 0,
-      pendingAssignments: pendingRes.count ?? 0,
-      avgCompletion: 68,
-    });
-    setRecentTickets((recentData ?? []) as ITicket[]);
-    setLoading(false);
+      const { data: gradesData } = await supabase.from('grades').select('*, profiles(full_name)');
+      
+      const perfMap = new Map<string, any>();
+      (gradesData || []).forEach(g => {
+        const name = g.profiles?.full_name || 'غير معروف';
+        if (!perfMap.has(g.trainee_id)) {
+          perfMap.set(g.trainee_id, { name, lessons: 0, quizzes: 0, tickets: 0, count: 0 });
+        }
+        const curr = perfMap.get(g.trainee_id);
+        curr.lessons += Number(g.lessons_score) || 0;
+        curr.quizzes += Number(g.quizzes_score) || 0;
+        curr.tickets += Number(g.tickets_score) || 0;
+        curr.count += 1;
+      });
+
+      const processedPerfData = Array.from(perfMap.values()).map(p => ({
+        name: p.name.split(' ')[0], // First name only
+        lessons: Math.round(p.lessons / p.count),
+        quizzes: Math.round(p.quizzes / p.count),
+        tickets: Math.round(p.tickets / p.count),
+      })).slice(0, 5); // Top 5
+
+      setStats({
+        trainees: traineeRes.count ?? 0,
+        openTickets: openRes.count ?? 0,
+        resolvedTickets: resolvedRes.count ?? 0,
+        pendingAssignments: pendingRes.count ?? 0,
+        avgCompletion: 68,
+      });
+      setRecentTickets((recentData ?? []) as ITicket[]);
+      setPerformanceData(processedPerfData);
+    } catch (err) {
+      console.error("Error fetching stats:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) return (

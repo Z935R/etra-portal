@@ -36,7 +36,7 @@ export function TraineesPage() {
           supabase.from('lesson_progress').select('id', { count: 'exact' })
             .eq('trainee_id', p.id).eq('is_completed', true),
           supabase.from('tickets').select('id', { count: 'exact' })
-            .eq('assigned_to', p.id).not('status', 'in', '("closed","resolved")'),
+            .eq('assigned_to', p.id).neq('status', 'closed').neq('status', 'resolved'),
           supabase.from('quiz_attempts').select('score')
             .eq('trainee_id', p.id).not('completed_at', 'is', null),
         ]);
