@@ -42,7 +42,7 @@ export function AdminDashboardPage() {
       const { data: gradesData } = await supabase.from('grades').select('*, profiles(full_name)');
       
       const perfMap = new Map<string, any>();
-      (gradesData || []).forEach(g => {
+      (gradesData || []).forEach((g: any) => {
         const name = g.profiles?.full_name || 'غير معروف';
         if (!perfMap.has(g.trainee_id)) {
           perfMap.set(g.trainee_id, { name, lessons: 0, quizzes: 0, tickets: 0, count: 0 });
