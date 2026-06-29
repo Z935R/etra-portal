@@ -143,6 +143,7 @@ export function DashboardPage() {
           icon={<BookOpen size={22} className="text-primary-600" />}
           iconBg="bg-primary-100"
           subtitle="درساً مكتملاً"
+          onClick={() => navigate(ROUTES.learning)}
         />
         <StatCard
           title={AR.pendingAssignments}
@@ -150,6 +151,7 @@ export function DashboardPage() {
           icon={<FileText size={22} className="text-warning" />}
           iconBg="bg-warning/15"
           subtitle="مهمة معلقة"
+          onClick={() => navigate(ROUTES.assignments)}
         />
         <StatCard
           title={AR.openTickets}
@@ -157,6 +159,7 @@ export function DashboardPage() {
           icon={<Ticket size={22} className="text-info" />}
           iconBg="bg-info/15"
           subtitle="تذكرة مفتوحة"
+          onClick={() => navigate(ROUTES.tickets)}
         />
         <StatCard
           title={AR.avgQuizScore}
@@ -164,6 +167,7 @@ export function DashboardPage() {
           icon={<BarChart2 size={22} className="text-success" />}
           iconBg="bg-success/15"
           subtitle="متوسط الدرجات"
+          onClick={() => navigate(ROUTES.quizzes)}
         />
       </motion.div>
 
