@@ -140,15 +140,18 @@ export function QuizAttemptPage() {
     const scorePercent = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
     const passed = scorePercent >= state.quiz.passing_score;
 
-    // Save answers + update attempt
-    await Promise.all([
-      supabase.from('quiz_answers').insert(answerInserts),
-      supabase.from('quiz_attempts').update({
-        score: scorePercent,
-        passed,
-        completed_at: new Date().toISOString(),
-      }).eq('id', state.attemptId),
-    ]);
+    // Save answers FIRST so the DB trigger can calculate the score correctly
+    const { error: answersError } = await supabase.from('quiz_answers').insert(answerInserts);
+    if (answersError) {
+      console.error('Error saving answers:', answersError);
+    }
+
+    // THEN update the attempt. The DB trigger will sum the points from the answers.
+    await supabase.from('quiz_attempts').update({
+      score: scorePercent, // Frontend calculation (will be overridden by DB trigger for security)
+      passed,
+      completed_at: new Date().toISOString(),
+    }).eq('id', state.attemptId);
 
     setState(s => s ? { ...s, phase: 'result', score: scorePercent, passed } : s);
     setSubmitting(false);
