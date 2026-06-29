@@ -60,6 +60,7 @@ export function QuizzesMgmtPage() {
       title_ar: quizForm.title_ar, 
       passing_score: quizForm.passing_score || 70,
       time_limit_minutes: quizForm.time_limit_minutes || 30,
+      max_attempts: quizForm.max_attempts || 3,
     };
 
     let error;
@@ -248,6 +249,7 @@ export function QuizzesMgmtPage() {
           <div className="grid grid-cols-2 gap-4">
             <Input label="درجة النجاح (%)" type="number" value={quizForm.passing_score || ''} onChange={e => setQuizForm({...quizForm, passing_score: +e.target.value})} />
             <Input label="الوقت (بالدقائق)" type="number" value={quizForm.time_limit_minutes || ''} onChange={e => setQuizForm({...quizForm, time_limit_minutes: +e.target.value})} />
+            <Input label="الحد الأقصى للمحاولات" type="number" value={quizForm.max_attempts || ''} onChange={e => setQuizForm({...quizForm, max_attempts: +e.target.value})} />
           </div>
           <div className="flex gap-2 pt-2">
             <Button type="submit" loading={saving} className="flex-1">حفظ</Button>
