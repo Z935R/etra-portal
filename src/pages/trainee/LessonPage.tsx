@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, ArrowLeft, CheckCircle2, Clock, Target, Zap, Video } from 'lucide-react';
 import { motion } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 import { toast } from 'sonner';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -177,11 +180,14 @@ export function LessonPage() {
       {/* Content */}
       {lesson.content_ar && (
         <div className="card p-6">
-          <div
-            className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
-            style={{ fontFamily: 'Cairo, sans-serif', lineHeight: '2' }}
-            dangerouslySetInnerHTML={{ __html: lesson.content_ar.replace(/\n/g, '<br/>') }}
-          />
+          <div className="prose prose-sm md:prose-base max-w-none text-gray-700 leading-loose marker:text-primary-600 prose-headings:text-gray-900 prose-headings:font-bold prose-img:rounded-xl prose-img:w-full prose-img:shadow-sm prose-a:text-primary-600 prose-strong:text-primary-700" style={{ fontFamily: 'Cairo, sans-serif' }}>
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+            >
+              {lesson.content_ar}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
 
@@ -192,10 +198,14 @@ export function LessonPage() {
             <Zap size={18} className="text-primary-600" />
             <h2 className="font-bold text-primary-800">النشاط التطبيقي</h2>
           </div>
-          <div
-            className="text-sm text-primary-900 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: lesson.practical_activity_ar.replace(/\n/g, '<br/>') }}
-          />
+          <div className="prose prose-sm max-w-none text-primary-900 leading-loose prose-strong:text-primary-800 marker:text-primary-600">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+            >
+              {lesson.practical_activity_ar}
+            </ReactMarkdown>
+          </div>
         </div>
       )}
 

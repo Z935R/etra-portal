@@ -46,6 +46,27 @@ export function ContentPage() {
     }
   };
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const handleContentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingImage(true);
+      const ext = file.name.split('.').pop();
+      const fileName = `content-${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
+      const { error } = await supabase.storage.from('lessons').upload(fileName, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('lessons').getPublicUrl(fileName);
+      const imageMarkdown = `\n![صورة توضيحية](${data.publicUrl})\n`;
+      setLessForm({ ...lessForm, content_ar: (lessForm.content_ar || '') + imageMarkdown });
+      toast.success('تم إدراج الصورة في المحتوى');
+    } catch (err: any) {
+      toast.error('حدث خطأ أثناء رفع الصورة: ' + err.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
@@ -321,7 +342,16 @@ export function ContentPage() {
           <Input label="الترتيب" type="number" value={lessForm.order_index || ''} onChange={e => setLessForm({...lessForm, order_index: +e.target.value})} required />
           <Input label="العنوان (بالعربية)" value={lessForm.title_ar || ''} onChange={e => setLessForm({...lessForm, title_ar: e.target.value})} required />
           <Input label="العنوان (بالإنجليزية)" value={lessForm.title_en || ''} onChange={e => setLessForm({...lessForm, title_en: e.target.value})} />
-          <Textarea label="المحتوى (بالعربية)" value={lessForm.content_ar || ''} onChange={e => setLessForm({...lessForm, content_ar: e.target.value})} />
+          <div className="relative">
+            <Textarea label="المحتوى (بالعربية) - يدعم Markdown" value={lessForm.content_ar || ''} onChange={e => setLessForm({...lessForm, content_ar: e.target.value})} rows={6} />
+            <div className="absolute top-0 left-0 mt-8 ml-2">
+              <label className="cursor-pointer bg-white border border-gray-200 text-gray-600 px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 hover:bg-gray-50 transition-colors shadow-sm">
+                <Upload size={14} />
+                {uploadingImage ? 'جاري...' : 'إدراج صورة'}
+                <input type="file" accept="image/*" className="hidden" onChange={handleContentImageUpload} disabled={uploadingImage} />
+              </label>
+            </div>
+          </div>
           <div>
             <Input label="رابط الفيديو (يوتيوب أو رابط مباشر)" value={lessForm.video_url || ''} onChange={e => setLessForm({...lessForm, video_url: e.target.value})} />
             <div className="mt-2 flex items-center gap-2">
